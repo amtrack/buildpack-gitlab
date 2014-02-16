@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Usage:
+#
+#     $ bin/detect <build-dir>
+
+# this pack is valid for apps with a hello.txt in the root
+if [ -f $1/hello.txt ]; then
+	echo "gitlab"
+	exit 0
+else
+	exit 1
+fi

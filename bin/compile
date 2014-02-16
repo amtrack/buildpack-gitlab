@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+# Usage:
+#
+#     $ bin/compile <build-dir> <cache-dir> <env-dir>
+
+# fail fast
+set -e
+
+# parse and derive params
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
+BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
+ROOT_DIR=$(dirname $BIN_DIR)
+PROFILE_PATH="$BUILD_DIR/.profile.d/gitlab.sh"
+
+# We'll need to send these statics to other scripts we `source`.
+export BUILD_DIR CACHE_DIR ENV_DIR BIN_DIR PROFILE_PATH
+
+# Syntax sugar.
+source $BIN_DIR/utils
+
+cd $BUILD_DIR

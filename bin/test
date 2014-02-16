@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# See README.md for info on running these tests.
+
+testDetectWithHelloTxt() {
+	detect "hello-txt"
+	assertCaptured "gitlab"
+	assertCapturedSuccess
+}
+
+testDetectWithoutHelloTxt() {
+	detect "no-hello-txt"
+	assertCapturedError 1 ""
+}
+
+# testEnvDirNotImported() {
+# 	compile "hello-txt"
+# 	assertNotCaptured "Exporting config vars to environment"
+# 	assertCapturedSuccess
+# }
+
+# testEnvDirExported() {
+# 	env_dir=$(mktmpdir)
+# 	echo "chicken" > $env_dir/birds
+# 	echo "koi" > $env_dir/fish
+# 	compile "hello-txt" "$(mktmpdir)" $env_dir
+# 	assertCaptured "Exporting config vars to environment"
+# 	assertCapturedSuccess
+# }
+
+# Utils
+
+pushd $(dirname 0) >/dev/null
+bp_dir=$(pwd)
+popd >/dev/null
+
+source "$bp_dir/vendor/test-utils/test-utils"
+
+mktmpdir() {
+	dir=$(mktemp -t testXXXXX)
+	rm -rf $dir
+	mkdir $dir
+	echo $dir
+}
+
+detect() {
+	capture "$bp_dir/bin/detect" "$bp_dir/test/$1"
+}
+
+compile_dir=""
+
+compile() {
+	compile_dir=$(mktmpdir)
+	if [ -z $2 ]; then
+		cache_dir=$2
+	else
+		cache_dir=$(mktmpdir)
+	fi
+	cp -r "$bp_dir/test/$1/." "$compile_dir"
+	capture "$bp_dir/bin/compile" "$compile_dir" "$cache_dir" "$3"
+}
+
+assertFile() {
+	assertEquals "$1" "$(cat $compile_dir/$2)"
+}
+
+source "$bp_dir/vendor/shunit2/shunit2"

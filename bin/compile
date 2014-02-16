@@ -50,9 +50,9 @@ wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/v1.8.0.tar.gz | tar x
 		git apply --ignore-space-change --ignore-whitespace $ROOT_DIR/support/patches/gitlab-shell-config.rb.patch
 	fi
 	status "Writing gitlab-shell/config.yml to read from REDIS_URL"
-	cp $ROOT_DIR/templates/gitlab-shell-config.yml config.yml
+	cp $ROOT_DIR/support/templates/gitlab-shell-config.yml config.yml
 	# dirty way to make sure the environment variables from gitlab will be available in gitlab-shell cli via ssh
-	cp $ROOT_DIR/templates/gitlab2gitlabshell-env.sh /usr/local/bin/gitlab2gitlabshell-env.sh
+	cp $ROOT_DIR/support/templates/gitlab2gitlabshell-env.sh /usr/local/bin/gitlab2gitlabshell-env.sh
 	chmod +x /usr/local/bin/gitlab2gitlabshell-env.sh
 	grep -q "gitlab2gitlabshell" || echo "session    optional     pam_exec.so /usr/local/bin/gitlab2gitlabshell-env.sh" >> /etc/pam.d/sshd
 	grep -q "PermitUserEnvironment yes" /etc/ssh/sshd_config || echo "PermitUserEnvironment yes" >> /etc/ssh/sshd_config
@@ -116,7 +116,7 @@ sudo cp lib/support/logrotate/gitlab /etc/logrotate.d/gitlab
 
 if [ ! -f config/initializers/smtp_settings.rb ]; then
 	status "Writing config/initializers/smtp_settings.rb to read from SMTP_URL"
-	cp $ROOT_DIR/templates/smtp_settings.rb config/initializers/smtp_settings.rb
+	cp $ROOT_DIR/support/templates/smtp_settings.rb config/initializers/smtp_settings.rb
 fi
 
 )

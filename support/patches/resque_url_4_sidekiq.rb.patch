@@ -1,0 +1,15 @@
+diff --git a/config/initializers/4_sidekiq.rb b/config/initializers/4_sidekiq.rb
+index c90d376..5d7f3b4 100644
+--- a/config/initializers/4_sidekiq.rb
++++ b/config/initializers/4_sidekiq.rb
+@@ -1,7 +1,9 @@
+ # Custom Redis configuration
+ config_file = Rails.root.join('config', 'resque.yml')
+ 
+-resque_url = if File.exists?(config_file)
++resque_url = if ENV['REDIS_URL']
++               ENV['REDIS_URL']
++             elsif File.exists?(config_file)
+                YAML.load_file(config_file)[Rails.env]
+              else
+                "redis://localhost:6379"

@@ -1,0 +1,17 @@
+diff --git a/lib/gitlab_config.rb b/lib/gitlab_config.rb
+index ad15247..54056b7 100644
+--- a/lib/gitlab_config.rb
++++ b/lib/gitlab_config.rb
+@@ -1,10 +1,11 @@
+ require 'yaml'
++require 'erb'
+ 
+ class GitlabConfig
+   attr_reader :config
+ 
+   def initialize
+-    @config = YAML.load_file(File.join(ROOT_PATH, 'config.yml'))
++    @config = YAML.load(ERB.new(File.read(File.join(ROOT_PATH, 'config.yml'))).result)
+   end
+ 
+   def repos_path

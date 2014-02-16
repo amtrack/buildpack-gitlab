@@ -1,23 +1,59 @@
-# Heroku buildpack: gitlab
+# Heroku buildpack: GitLab
 
-This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for [gitlab](http://google.com/?q=gitlab).
+This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for [GitLab](http://gitlab.org/).
 
 [![Build Status](https://secure.travis-ci.org/amtrack/buildpack-gitlab.png?branch=master)](http://travis-ci.org/amtrack/buildpack-gitlab)
 
 ## Usage
 
-Example usage:
+Checkout gitlabhq:
 
-    $ ls
-    hello.txt
+	$ git clone https://github.com/gitlabhq/gitlabhq.git
+	$ cd gitlabhq
+	$ git checkout -b deployment
+    $ echo -e "https://github.com/amtrack/buildpack-gitlab.git\nhttps://github.com/heroku/heroku-buildpack-ruby.git" > .buildpacks
+	$ git add .buildpacks
+	$ git commit -m "prepare for dokku"
+	$ git remote add dokku <your-dokku-url>
+	$ git push dokku deployment:master # will fail
 
-    $ heroku create --stack cedar --buildpack https://github.com/amtrack/buildpack-gitlab
+Configure the app on your dokku server:
 
-    $ git push heroku master
-    ...
-    -----> Heroku receiving push
-    -----> Fetching custom buildpack
-    -----> gitlab app detected
+	$ dokku config:set gitlab BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
+	$ dokku config:set gitlab CURL_TIMEOUT=120
+	$ dokku config:set gitlab SMTP_URL=smtps://user:password@smtp.gmail.com/?domain=gmail.com
+	$ dokku mariadb:create gitlab
+	$ dokku redis:create gitlab
+	$ cat < /home/dokku/gitlab/DOCKER_ARGS EOF
+	-v /opt/gitlab/repositories:/home/git/repositories
+	-v /opt/gitlab/.ssh:/home/git/.ssh
+	-p 2222:22
+	EOF
+
+Push again:
+
+	$ git push dokku deployment:master
+
+Seed the database:
+
+	$ dokku run gitlab bundle exec rake db:setup RAILS_ENV=production
+	$ dokku run gitlab bundle exec rake db:seed_fu RAILS_ENV=production
+
+## Required dokku plugins
+
+ * [dokku-user-env-compile](https://github.com/musicglue/dokku-user-env-compile)
+ * [dokku-supervisord](https://github.com/statianzo/dokku-supervisord)
+ * [dokku-postgres-plugin](https://github.com/jezdez/dokku-postgres-plugin) or [dokku-md-plugin](https://github.com/Kloadut/dokku-md-plugin)
+ * [dokku-redis-plugin](https://github.com/luxifer/dokku-redis-plugin)
+ * [dokku-docker-args](https://github.com/amtrack/dokku-docker-args) or [dokku-persistent-storage](https://github.com/dyson/dokku-persistent-storage)
+
+## Info
+
+Most of the GitLab Installation stuff is borrowed from
+
+ * [sameersbn/docker-gitlab](https://github.com/sameersbn/docker-gitlab)
+
+This buildpack was generated with the Yeoman generator [generator-buildpack](https://github.com/amtrack/generator-buildpack)
 
 Hacking
 -------
@@ -34,6 +70,10 @@ heroku config:set BUILDPACK_URL=<your-github-url>
 # You can also use a git branch!
 heroku config:set BUILDPACK_URL=<your-github-url>#your-branch
 ```
+
+## Known Issues
+
+See [here](https://github.com/amtrack/buildpack-gitlab/wiki/KnownIssues)
 
 ## Testing
 

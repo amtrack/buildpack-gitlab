@@ -3,3 +3,7 @@
 # Usage:
 #
 #     $ bin/release <build-dir>
+
+cat << EOF
+---
+EOF

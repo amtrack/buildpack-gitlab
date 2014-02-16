@@ -1,19 +1,27 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
-testDetectWithHelloTxt() {
-	detect "hello-txt"
-	assertCaptured "gitlab"
+testDetectWithGitlabYmlExample() {
+	detect "gitlab-yml-example"
+	assertCaptured "GitLab"
 	assertCapturedSuccess
 }
 
-testDetectWithoutHelloTxt() {
-	detect "no-hello-txt"
+testDetectWithoutGitlabYmlExample() {
+	detect "no-gitlab-yml-example"
 	assertCapturedError 1 ""
 }
 
+testStable-6-5() {
+	git clone -b 6-5-stable https://github.com/gitlabhq/gitlabhq.git $BIN_DIR/../test/stable-6-5
+	compile "stable-6-5"
+	assertCaptured "Installing required packages"
+	assertCaptured "Finished building GitLab"
+	assertCapturedSuccess
+}
+
 # testEnvDirNotImported() {
-# 	compile "hello-txt"
+# 	compile "gitlab-yml-example"
 # 	assertNotCaptured "Exporting config vars to environment"
 # 	assertCapturedSuccess
 # }
@@ -22,7 +30,7 @@ testDetectWithoutHelloTxt() {
 # 	env_dir=$(mktmpdir)
 # 	echo "chicken" > $env_dir/birds
 # 	echo "koi" > $env_dir/fish
-# 	compile "hello-txt" "$(mktmpdir)" $env_dir
+# 	compile "gitlab-yml-example" "$(mktmpdir)" $env_dir
 # 	assertCaptured "Exporting config vars to environment"
 # 	assertCapturedSuccess
 # }

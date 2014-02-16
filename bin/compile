@@ -22,3 +22,108 @@ export BUILD_DIR CACHE_DIR ENV_DIR BIN_DIR PROFILE_PATH
 source $BIN_DIR/utils
 
 cd $BUILD_DIR
+
+# 1. Packages / Dependencies
+status "Installing required packages"
+export DEBIAN_FRONTEND=noninteractive
+sed 's/main$/main universe/' -i /etc/apt/sources.list
+echo "deb http://ppa.launchpad.net/git-core/ppa/ubuntu lucid main" >> /etc/apt/sources.list
+apt-get update -q && apt-get upgrade -q -y --force-yes
+apt-get install -q -y unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils
+apt-get clean
+
+# 2. Ruby
+# via heroku-buildpack-ruby
+
+# 3. System Users
+status "Configuring git user"
+adduser --disabled-login --gecos 'GitLab' git
+
+# 4. GitLab shell
+mkdir -p /home/git/gitlab-shell
+wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/v1.8.0.tar.gz | tar xz --strip=1 -C /home/git/gitlab-shell/
+
+(
+	cd /home/git/gitlab-shell
+	if git apply --check $ROOT_DIR/support/patches/gitlab-shell-config.rb.patch &> /dev/null; then
+		status "Patching gitlab-shell/lib/gitlab_config.rb to allow using ERB in config.yml"
+		git apply --ignore-space-change --ignore-whitespace $ROOT_DIR/support/patches/gitlab-shell-config.rb.patch
+	fi
+	status "Writing gitlab-shell/config.yml to read from REDIS_URL"
+	cp $ROOT_DIR/templates/gitlab-shell-config.yml config.yml
+	# dirty way to make sure the environment variables from gitlab will be available in gitlab-shell cli via ssh
+	cp $ROOT_DIR/templates/gitlab2gitlabshell-env.sh /usr/local/bin/gitlab2gitlabshell-env.sh
+	chmod +x /usr/local/bin/gitlab2gitlabshell-env.sh
+	grep -q "gitlab2gitlabshell" || echo "session    optional     pam_exec.so /usr/local/bin/gitlab2gitlabshell-env.sh" >> /etc/pam.d/sshd
+	grep -q "PermitUserEnvironment yes" /etc/ssh/sshd_config || echo "PermitUserEnvironment yes" >> /etc/ssh/sshd_config
+	test -d /home/git/.profile.d || mkdir /home/git/.profile.d
+	ln -s $BUILD_DIR/.profile.d/app-env.sh /home/git/.profile.d/app-env.sh
+	./bin/install
+	chown -R git:git /home/git
+)
+
+# 5. Database
+
+# 6. GitLab
+
+(
+
+cd $BUILD_DIR # /app
+
+# TODO: convert to patch
+sed 's/web:.*/web: bundle exec unicorn_rails -p $PORT -E $RACK_ENV/' -i Procfile
+grep -q "sshd" Procfile || echo "sshd: /usr/sbin/sshd -D" >> Procfile
+
+if git apply --check $ROOT_DIR/support/patches/resque_url_4_sidekiq.rb.patch &> /dev/null; then
+	status "Patching config/initializers/4_sidekiq.rb to read from REDIS_URL"
+	git apply --ignore-space-change --ignore-whitespace $ROOT_DIR/support/patches/resque_url_4_sidekiq.rb.patch
+fi
+if git apply --check $ROOT_DIR/support/patches/resque_url_production.rb.patch &> /dev/null; then
+	status "Patching config/environments/production.rb to read from REDIS_URL"
+	git apply --ignore-space-change --ignore-whitespace $ROOT_DIR/support/patches/resque_url_production.rb.patch
+fi
+
+# copy default configurations
+test -f config/gitlab.yml || cp config/gitlab.yml.example config/gitlab.yml
+test -f config/resque.yml || cp config/resque.yml.example config/resque.yml
+
+test -f config/unicorn.rb || cp config/unicorn.rb.example config/unicorn.rb
+test -f config/initializers/rack_attack.rb || cp config/initializers/rack_attack.rb.example config/initializers/rack_attack.rb
+
+sudo -u git -H git config --global user.name "GitLab"
+sudo -u git -H git config --global user.email "gitlab@localhost"
+sudo -u git -H git config --global core.autocrlf input
+
+# run processes as root
+# status "Patching config/gitlab.yml to run processes as root"
+# sed 's,# user: git,user: root,' -i config/gitlab.yml
+# grep -q "ssh_user: git" config/gitlab.yml || sed '/ssh_port:/i\    ssh_user: git' -i config/gitlab.yml
+
+# create required tmp and log directories
+mkdir -p tmp/pids/ tmp/sockets/ public/uploads
+
+mkdir /home/git/gitlab-satellites
+
+# cat > config/sidekiq.yml <<EOF
+# :concurrency: {{SIDEKIQ_CONCURRENCY}}
+# EOF
+
+# install logrotate configuration
+sudo cp lib/support/logrotate/gitlab /etc/logrotate.d/gitlab
+
+# 7. Nginx
+# not required
+
+if [ ! -f config/initializers/smtp_settings.rb ]; then
+	status "Writing config/initializers/smtp_settings.rb to read from SMTP_URL"
+	cp $ROOT_DIR/templates/smtp_settings.rb config/initializers/smtp_settings.rb
+fi
+
+)
+
+chown -R git:git /home/git
+
+# create the /var/run/sshd directory (required for sshd to start)
+mkdir -p /var/run/sshd
+
+status "Finished building GitLab"

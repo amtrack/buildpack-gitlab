@@ -28,9 +28,9 @@ export DEBIAN_FRONTEND=noninteractive
 sudo sed 's/main$/main universe/' -i /etc/apt/sources.list
 grep "git-core" /etc/apt/sources.list || echo "deb http://ppa.launchpad.net/git-core/ppa/ubuntu lucid main" | sudo tee /etc/apt/sources.list > /dev/null
 status "Synchronizing package index"
-sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq &> /dev/null
+sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq # &> /dev/null
 status "Upgrading packages"
-sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -qq --force-yes -o Dpkg::Options::="--force-confold" &> /dev/null
+sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -qq --force-yes -o Dpkg::Options::="--force-confold" # &> /dev/null
 status "Installing required packages"
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -q -y unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils
 status "Cleaning up"

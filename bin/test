@@ -13,7 +13,7 @@ testDetectWithoutGitlabYmlExample() {
 }
 
 testStable_6_5() {
-	git clone -b 6-5-stable https://github.com/gitlabhq/gitlabhq.git $BIN_DIR/../test/stable_6_5
+	git clone -b 6-5-stable https://github.com/gitlabhq/gitlabhq.git $bp_dir/test/stable_6_5
 	compile "stable_6_5"
 	assertCaptured "Installing required packages"
 	assertCaptured "Finished building GitLab"

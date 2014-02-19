@@ -30,8 +30,6 @@ sudo -E apt-get update -qq
 
 status "Installing python-software-properties"
 sudo -E apt-get install python-software-properties
-status "Adding apt repository universe"
-sudo add-apt-repository universe
 status "Adding apt repository ppa:git-core"
 sudo FORCE_ADD_APT_REPOSITORY=yes add-apt-repository ppa:git-core/ppa
 status "Synchronizing package index again"

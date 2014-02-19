@@ -18,7 +18,6 @@ testStable_6_5() {
 	compile "stable_6_5"
 	assertCaptured "Synchronizing package index"
 	assertCaptured "Installing python-software-properties"
-	assertCaptured "Adding apt repository universe"
 	assertCaptured "Adding apt repository ppa:git-core"
 	assertCaptured "Synchronizing package index again"
 	# assertCaptured "Upgrading packages"

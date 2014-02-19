@@ -24,13 +24,17 @@ source $BIN_DIR/utils
 cd $BUILD_DIR
 
 # 1. Packages / Dependencies
-status "Installing required packages"
 export DEBIAN_FRONTEND=noninteractive
 sudo sed 's/main$/main universe/' -i /etc/apt/sources.list
-grep "git-core" /etc/apt/sources.list || echo "deb http://ppa.launchpad.net/git-core/ppa/ubuntu lucid main" || sudo tee /etc/apt/sources.list > /dev/null
-sudo apt-get update -qq && sudo apt-get upgrade -qq --force-yes
-sudo apt-get install -q -y unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils
-sudo apt-get clean
+grep "git-core" /etc/apt/sources.list || echo "deb http://ppa.launchpad.net/git-core/ppa/ubuntu lucid main" | sudo tee /etc/apt/sources.list > /dev/null
+status "synchronizing package index"
+sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq &> /dev/null
+status "upgrading packages"
+sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -qq --force-yes &> /dev/null
+status "installing required packages"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -q -y unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils
+status "cleaning up"
+sudo DEBIAN_FRONTEND=noninteractive apt-get clean
 
 # 2. Ruby
 # via heroku-buildpack-ruby

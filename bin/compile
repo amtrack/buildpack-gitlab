@@ -26,13 +26,13 @@ cd $BUILD_DIR
 # 1. Packages / Dependencies
 export DEBIAN_FRONTEND=noninteractive
 status "Synchronizing package index"
-sudo -E apt-get update -qq
+sudo -E apt-get update # -qq
 
 status "Adding apt repositories"
 sudo -E apt-get install python-software-properties
 sudo add-apt-repository universe
 sudo add-apt-repository ppa:git-core/ppa
-sudo -E apt-get update -qq
+sudo -E apt-get update # -qq
 
 # status "Upgrading packages"
 # sudo -E apt-get upgrade -qq --force-yes -o Dpkg::Options::="--force-confold" # &> /dev/null

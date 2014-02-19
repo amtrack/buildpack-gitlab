@@ -17,7 +17,7 @@ testStable_6_5() {
 	echo "cloned"
 	compile "stable_6_5"
 	assertCaptured "Synchronizing package index"
-	assertCaptured "Upgrading packages"
+	# assertCaptured "Upgrading packages"
 	assertCaptured "Installing required packages"
 	assertCaptured "Cleaning up"
 	assertCaptured "Configuring git user"

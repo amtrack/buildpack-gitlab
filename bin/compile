@@ -28,7 +28,7 @@ status "Installing required packages"
 export DEBIAN_FRONTEND=noninteractive
 sudo sed 's/main$/main universe/' -i /etc/apt/sources.list
 grep "git-core" /etc/apt/sources.list || echo "deb http://ppa.launchpad.net/git-core/ppa/ubuntu lucid main" || sudo tee /etc/apt/sources.list > /dev/null
-sudo apt-get update -q && sudo apt-get upgrade -q -y --force-yes
+sudo apt-get update -qq && sudo apt-get upgrade -qq --force-yes
 sudo apt-get install -q -y unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils
 sudo apt-get clean
 

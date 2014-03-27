@@ -29,7 +29,7 @@ status "Synchronizing package index"
 sudo -E apt-get update -qq
 
 status "Installing python-software-properties"
-sudo -E apt-get install -y python-software-properties
+sudo -E apt-get install -y python-software-properties software-properties-common
 status "Adding apt repository ppa:git-core"
 sudo FORCE_ADD_APT_REPOSITORY=yes add-apt-repository ppa:git-core/ppa
 status "Synchronizing package index again"

@@ -21,6 +21,9 @@ export BUILD_DIR CACHE_DIR ENV_DIR BIN_DIR PROFILE_PATH
 # Syntax sugar.
 source $BIN_DIR/utils
 
+# exit if no build environment
+[[ ! $REDIS_URL ]] && echo -e "\n**********\nNo supporting environment detected!\nPlease create supporting application services.\n**********\n" && exit 1
+
 cd $BUILD_DIR
 
 # 1. Packages / Dependencies

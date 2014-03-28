@@ -53,6 +53,8 @@ sudo -E apt-get clean
 # 3. System Users
 status "Configuring git user"
 sudo adduser --disabled-login --gecos 'GitLab' git
+sudo -u git -H git config --global user.name GitLab
+sudo -u git -H git config --global user.email "git@$(hostname -d)"
 
 # 4. GitLab shell
 sudo -u git -H mkdir -p /home/git/gitlab-shell

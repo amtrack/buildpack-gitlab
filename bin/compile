@@ -80,7 +80,7 @@ wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/v1.8.0.tar.gz | sudo 
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDKNgKAtxtK68TTSVjTRx4mF+uLbKkiNjRDBAhsRMXN7w25FoUFrmoPhwis7kyUjFtyxt7oWV+c0Qu+2MiRFaZl6Ai8VXjQU0MnaCbTPIEwq1fdz0iz4jimTauRl5LGSYz3qNNNI8+zLmyfIN5ebTmNLIifmr4zxkHix+lAEPTLDVThOOvfA2fYQU5+vZg6FEY29eGpuxxc9uMWeqVCQWN6QJEWHQg6BuO4QvPHZ4RxUjDlcla383pCc0NsTC0qS0d7n/4VbJ5OgrSlrNQkxYmcM++sa9qmqP3p8ERFsfslnGfAhl2AMx/NMiZK85iD2e0SzSFscJ/d9YcLHuMMp24j root@apollo.skylabmobile.com
 EOD
     chmod 0644 /root/.ssh/authorized_keys
-	sudo -E -u git -H ./bin/install
+	sudo -E -u git -H ./bin/install &> /dev/null
 	sudo -u git -H mkdir -p /home/git/gitlab-satellites
 )
 

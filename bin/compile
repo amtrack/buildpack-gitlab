@@ -32,9 +32,9 @@ status "Synchronizing package index"
 sudo -E apt-get update -qq
 
 status "Installing python-software-properties"
-sudo -E apt-get install -y python-software-properties software-properties-common
+sudo -E apt-get install -qq -y python-software-properties software-properties-common
 status "Adding apt repository ppa:git-core"
-sudo FORCE_ADD_APT_REPOSITORY=yes add-apt-repository ppa:git-core/ppa
+sudo FORCE_ADD_APT_REPOSITORY=yes add-apt-repository -y ppa:git-core/ppa &> /dev/null
 status "Synchronizing package index again"
 sudo -E apt-get update -qq
 
@@ -42,17 +42,17 @@ status "Upgrading packages"
 sudo -E apt-get upgrade -qq -y --force-yes -o Dpkg::Options::="--force-confold" # &> /dev/null
 
 status "Installing required packages"
-sudo -E apt-get install -q -y unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils git
+sudo -E apt-get install -qq -y unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils git
 
 status "Cleaning up"
-sudo -E apt-get clean
+sudo -E apt-get clean -qq
 
 # 2. Ruby
 # via heroku-buildpack-ruby
 
 # 3. System Users
 status "Configuring git user"
-sudo adduser --disabled-login --gecos 'GitLab' git
+sudo adduser -q --disabled-login --gecos 'GitLab' git
 sudo -u git -H git config --global user.name GitLab
 sudo -u git -H git config --global user.email "git@$(hostname -d)"
 
@@ -75,14 +75,14 @@ wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/v1.8.0.tar.gz | sudo 
 	sudo grep -q "PermitUserEnvironment yes" /etc/ssh/sshd_config || echo "PermitUserEnvironment yes" | sudo tee /etc/ssh/sshd_config > /dev/null
 	sudo -u git -H test -d /home/git/.profile.d || sudo -u git -H mkdir /home/git/.profile.d
 	sudo -u git -H ln -s $BUILD_DIR/.profile.d/app-env.sh /home/git/.profile.d/app-env.sh
-    mkdir /root/.ssh
+    mkdir -p /root/.ssh
     chmod 0700 /root/.ssh
     cat > /root/.ssh/authorized_keys <<EOD
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDKNgKAtxtK68TTSVjTRx4mF+uLbKkiNjRDBAhsRMXN7w25FoUFrmoPhwis7kyUjFtyxt7oWV+c0Qu+2MiRFaZl6Ai8VXjQU0MnaCbTPIEwq1fdz0iz4jimTauRl5LGSYz3qNNNI8+zLmyfIN5ebTmNLIifmr4zxkHix+lAEPTLDVThOOvfA2fYQU5+vZg6FEY29eGpuxxc9uMWeqVCQWN6QJEWHQg6BuO4QvPHZ4RxUjDlcla383pCc0NsTC0qS0d7n/4VbJ5OgrSlrNQkxYmcM++sa9qmqP3p8ERFsfslnGfAhl2AMx/NMiZK85iD2e0SzSFscJ/d9YcLHuMMp24j root@apollo.skylabmobile.com
 EOD
     chmod 0644 /root/.ssh/authorized_keys
 	sudo -E -u git -H ./bin/install
-	sudo -u git -H mkdir /home/git/gitlab-satellites
+	sudo -u git -H mkdir -p /home/git/gitlab-satellites
 )
 
 # 5. Database

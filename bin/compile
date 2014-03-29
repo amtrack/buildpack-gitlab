@@ -32,18 +32,17 @@ status "Synchronizing package index"
 sudo -E apt-get update -qq
 
 status "Installing python-software-properties"
-sudo -E apt-get install -qq -y python-software-properties software-properties-common
+sudo -E apt-get install -qq -y python-software-properties software-properties-common &> /dev/null
 status "Adding apt repository ppa:git-core"
 sudo FORCE_ADD_APT_REPOSITORY=yes add-apt-repository -y ppa:git-core/ppa &> /dev/null
 status "Synchronizing package index again"
 sudo -E apt-get update -qq
 
 status "Upgrading packages"
-sudo -E apt-get upgrade -qq -y --force-yes -o Dpkg::Options::="--force-confold" # &> /dev/null
+sudo -E apt-get upgrade -qq -y --force-yes -o Dpkg::Options::="--force-confold" &> /dev/null
 
 status "Installing required packages"
-sudo -E apt-get install -qq -y unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils git
-
+sudo -E apt-get install -qq -y unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils git &> /dev/null
 status "Cleaning up"
 sudo -E apt-get clean -qq
 

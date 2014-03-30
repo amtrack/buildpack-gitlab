@@ -70,7 +70,7 @@ wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/v1.8.0.tar.gz | sudo 
 	# dirty way to make sure the environment variables from gitlab will be available in gitlab-shell cli via ssh
 	sudo cp $ROOT_DIR/support/templates/gitlab2gitlabshell-env.sh /usr/local/bin/gitlab2gitlabshell-env.sh
     status "Point config/resque.yml to REDIS_URL"
-    echo 'production: {{REDIS_URL}}' > config/resque.yml
+    echo 'production: {{REDIS_URL}}' > /app/config/resque.yml
 	status "Configure gitlab-shell ssh"
 	sudo chmod +x /usr/local/bin/gitlab2gitlabshell-env.sh
 	sudo grep -q "gitlab2gitlabshell" /etc/pam.d/sshd || echo "session    optional     pam_exec.so /usr/local/bin/gitlab2gitlabshell-env.sh" | sudo tee /etc/pam.d/sshd > /dev/null

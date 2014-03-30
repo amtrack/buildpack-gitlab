@@ -33,6 +33,21 @@ Create a dokku application on the server:
 	$ git remote add dokku <your-dokku-url>:<your-app-name>
 	$ git push dokku deployment:master
 
+The push will fail with the following message
+
+    **********
+    No supporting environment detected!
+    Please create supporting application services.
+    **********
+
+Assuming you have the following section configured in your ssh client config file (located at `~/.ssh/config`)
+
+```ssh
+Host dokku
+   HostName dokku.example.com
+   User dokku
+   RequestTTY yes
+```
 
 
 

@@ -76,7 +76,7 @@ wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/v1.8.0.tar.gz | sudo 
 	sudo grep -q "gitlab2gitlabshell" /etc/pam.d/sshd || echo "session    optional     pam_exec.so /usr/local/bin/gitlab2gitlabshell-env.sh" | sudo tee /etc/pam.d/sshd > /dev/null
 	sudo grep -q "PermitUserEnvironment yes" /etc/ssh/sshd_config || echo "PermitUserEnvironment yes" | sudo tee /etc/ssh/sshd_config > /dev/null
 	sudo -u git -H test -d /home/git/.profile.d || sudo -u git -H mkdir /home/git/.profile.d
-	sudo -u git -H ln -s $BUILD_DIR/.profile.d/app-env.sh /home/git/.profile.d/app-env.sh
+	sudo -u git -H ln -sf $BUILD_DIR/.profile.d/app-env.sh /home/git/.profile.d/app-env.sh
 	status "Install gitlab-satellites"
 	sudo -E -u git -H ./bin/install > /dev/null
 	sudo -u git -H mkdir -p /home/git/gitlab-satellites

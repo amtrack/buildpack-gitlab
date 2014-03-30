@@ -53,10 +53,6 @@ sudo -E apt-get clean -qq
 status "Configuring git user"
 sudo addgroup -q --gid 1002 git
 sudo adduser -q --disabled-login --gecos 'GitLab' --home /home/git --uid 1002 --gid 1002 git
-status "Configure git config user"
-sudo -u git -H git config --global user.name GitLab
-sudo -u git -H git config --global user.email "git@$(hostname -d)"
-sudo -u git -H git config --global core.autocrlf input
 
 # 4. GitLab shell
 status "Installing gitlab-shell to /home/git"
@@ -112,8 +108,9 @@ test -f config/resque.yml || cp config/resque.yml.example config/resque.yml
 test -f config/unicorn.rb || cp config/unicorn.rb.example config/unicorn.rb
 test -f config/initializers/rack_attack.rb || cp config/initializers/rack_attack.rb.example config/initializers/rack_attack.rb
 
-sudo -u git -H git config --global user.name "GitLab"
-sudo -u git -H git config --global user.email "gitlab@localhost"
+status "Configure git config user"
+sudo -u git -H git config --global user.name GitLab
+sudo -u git -H git config --global user.email "git@$(hostname -d)"
 sudo -u git -H git config --global core.autocrlf input
 
 # run processes as root

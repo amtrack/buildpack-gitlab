@@ -155,5 +155,7 @@ status "Create sshd work folder"
 # create the /var/run/sshd directory (required for sshd to start)
 sudo mkdir -p /var/run/sshd
 
-ls -la /home/git
+cd /home 
+tar jcf git.tar.bz git
+
 status "Finished building GitLab"

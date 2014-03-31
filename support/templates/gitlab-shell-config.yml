@@ -21,13 +21,13 @@ end
 user: git
 
 # Url to gitlab instance. Used for api calls. Should end with a slash.
-gitlab_url: "http://<%= container_ip $>:5000/"
+gitlab_url: "http://<%= container_ip %>:5000/"
 
 http_settings:
 #  user: someone
 #  password: somepass
-#  ca_file: /etc/ssl/cert.pem
-#  ca_path: /etc/pki/tls/certs
+#  ca_file: /etc/ssl/cacert.pem
+#  ca_path: /etc/ssl/certs
   self_signed_cert: false
 
 # Repositories path

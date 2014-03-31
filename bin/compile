@@ -73,12 +73,14 @@ wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/v1.8.0.tar.gz | sudo 
 	status "Writing gitlab-shell/config.yml to read from REDIS_URL"
 	sudo -u git -H cp $ROOT_DIR/support/templates/gitlab-shell-config.yml config.yml
 	sudo -u git -H cp $ROOT_DIR/support/templates/redis-cli /home/git/gitlab-shell/bin/redis-cli
+	sudo -u git -H touch /home/git/gitlab-shell/gitlab-shell.log
 	# dirty way to make sure the environment variables from gitlab will be available in gitlab-shell cli via ssh
 	sudo cp $ROOT_DIR/support/templates/gitlab2gitlabshell-env.sh /usr/local/bin/gitlab2gitlabshell-env.sh
     status "Point config/resque.yml to REDIS_URL"
     echo 'production: {{REDIS_URL}}' > /app/config/resque.yml
 	status "Configure gitlab-shell ssh"
 	sudo chmod +x /usr/local/bin/gitlab2gitlabshell-env.sh
+	sudo -u git -H /usr/local/bin/gitlab2gitlabshell-env.sh
 	sudo grep -q "gitlab2gitlabshell" /etc/pam.d/sshd || echo "session    optional     pam_exec.so /usr/local/bin/gitlab2gitlabshell-env.sh" | sudo tee /etc/pam.d/sshd > /dev/null
 	sudo grep -q "PermitUserEnvironment yes" /etc/ssh/sshd_config || echo "PermitUserEnvironment yes" | sudo tee /etc/ssh/sshd_config > /dev/null
 	sudo -u git -H test -d /home/git/.profile.d || sudo -u git -H mkdir /home/git/.profile.d
@@ -159,9 +161,6 @@ chmod 0644 /root/.ssh/authorized_keys
 status "Create sshd work folder"
 # create the /var/run/sshd directory (required for sshd to start)
 sudo mkdir -p /var/run/sshd
-
-cd /home 
-tar jcf git.tar.bz git
 
 # link to the up and coming ruby 2.0
 cd /usr/bin

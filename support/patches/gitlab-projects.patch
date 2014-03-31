@@ -1,0 +1,16 @@
+diff --git a/bin/gitlab-projects b/bin/gitlab-projects
+index 318ea9c..b9a1d23 100755
+--- a/bin/gitlab-projects
++++ b/bin/gitlab-projects
+@@ -1,5 +1,11 @@
+ #!/usr/bin/env ruby
+
+ +begin
+ +  Process.egid= 1002
+ +  Process.euid= 1002
+ +rescue
+ +end
+ +
+  require_relative '../lib/gitlab_init'
+
+   #

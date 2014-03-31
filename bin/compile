@@ -66,6 +66,10 @@ wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/v1.8.0.tar.gz | sudo 
 		status "Patching gitlab-shell/lib/gitlab_config.rb to allow using ERB in config.yml"
 		sudo -u git -H git apply --ignore-space-change --ignore-whitespace $ROOT_DIR/support/patches/gitlab-shell-config.rb.patch
 	fi
+	if sudo -u git -H git apply --check $ROOT_DIR/support/patches/gitlab-projects.patch &> /dev/null; then
+		status "Patching gitlab-shell/bin/gitlab-projects to run as user git"
+		sudo -u git -H git apply --ignore-space-change --ignore-whitespace $ROOT_DIR/support/patches/gitlab-projects.patch
+	fi
 	status "Writing gitlab-shell/config.yml to read from REDIS_URL"
 	sudo -u git -H cp $ROOT_DIR/support/templates/gitlab-shell-config.yml config.yml
 	sudo -u git -H cp $ROOT_DIR/support/templates/redis-cli /home/git/gitlab-shell/bin/redis-cli

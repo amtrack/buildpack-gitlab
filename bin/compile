@@ -52,7 +52,8 @@ sudo -E apt-get clean -qq
 # 3. System Users
 status "Configuring git user"
 # sudo addgroup -q --gid 1002 git
-sudo adduser -q --disabled-login --gecos 'GitLab' git # --home /home/git --uid 1002 --gid 1002 git
+sudo adduser -q --disabled-password --gecos 'GitLab user' gitlab
+sudo adduser -q --disabled-password --gecos 'GitLab git user' --group git --gid 1002 --uid 1002 git
 
 # 4. GitLab shell
 status "Installing gitlab-shell to /home/git"

@@ -161,6 +161,10 @@ tar jcf git.tar.bz git
 
 # link to the up and coming ruby 2.0
 cd /usr/bin
+mkdir -p /app/bin
+mv ruby /app/bin/
+mv gem /app/bin/
+
 ln -fs /app/bin/bundle
 ln -fs /app/bin/erb
 ln -fs /app/bin/gem

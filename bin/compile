@@ -21,6 +21,9 @@ export BUILD_DIR CACHE_DIR ENV_DIR BIN_DIR PROFILE_PATH
 # Syntax sugar.
 source $BIN_DIR/utils
 
+# exit if no build environment
+[[ ! $REDIS_URL ]] && echo -e "\n**********\nNo supporting environment detected!\nPlease create supporting application services.\n**********\n" && exit 1
+
 cd $BUILD_DIR
 
 # 1. Packages / Dependencies
@@ -29,29 +32,31 @@ status "Synchronizing package index"
 sudo -E apt-get update -qq
 
 status "Installing python-software-properties"
-sudo -E apt-get install python-software-properties
+sudo -E apt-get install -qq -y python-software-properties software-properties-common > /dev/null
 status "Adding apt repository ppa:git-core"
-sudo FORCE_ADD_APT_REPOSITORY=yes add-apt-repository ppa:git-core/ppa
+sudo FORCE_ADD_APT_REPOSITORY=yes add-apt-repository -y ppa:git-core/ppa > /dev/null
 status "Synchronizing package index again"
 sudo -E apt-get update -qq
 
 status "Upgrading packages"
-sudo -E apt-get upgrade -qq --force-yes -o Dpkg::Options::="--force-confold" # &> /dev/null
+sudo -E apt-get upgrade -qq -y --force-yes -o Dpkg::Options::="--force-confold" > /dev/null
 
 status "Installing required packages"
-sudo -E apt-get install -q -y unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils git
-
+sudo -E apt-get install -qq -y unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils git > /dev/null
 status "Cleaning up"
-sudo -E apt-get clean
+sudo -E apt-get clean -qq
 
 # 2. Ruby
 # via heroku-buildpack-ruby
 
 # 3. System Users
 status "Configuring git user"
-sudo adduser --disabled-login --gecos 'GitLab' git
+sudo adduser -q --disabled-password --gecos 'GitLab user' gitlab
+sudo addgroup -q --gid 1002 git
+sudo adduser -q --disabled-password --gecos 'GitLab git user' --gid 1002 --uid 1002 git
 
 # 4. GitLab shell
+status "Installing gitlab-shell to /home/git"
 sudo -u git -H mkdir -p /home/git/gitlab-shell
 wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/v1.8.0.tar.gz | sudo -u git -H tar xz --strip=1 -C /home/git/gitlab-shell/
 
@@ -61,17 +66,26 @@ wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/v1.8.0.tar.gz | sudo 
 		status "Patching gitlab-shell/lib/gitlab_config.rb to allow using ERB in config.yml"
 		sudo -u git -H git apply --ignore-space-change --ignore-whitespace $ROOT_DIR/support/patches/gitlab-shell-config.rb.patch
 	fi
+	if sudo -u git -H git apply --check $ROOT_DIR/support/patches/gitlab-projects.patch &> /dev/null; then
+		status "Patching gitlab-shell/bin/gitlab-projects to run as user git"
+		sudo -u git -H git apply --ignore-space-change --ignore-whitespace $ROOT_DIR/support/patches/gitlab-projects.patch
+	fi
 	status "Writing gitlab-shell/config.yml to read from REDIS_URL"
 	sudo -u git -H cp $ROOT_DIR/support/templates/gitlab-shell-config.yml config.yml
+	sudo -u git -H cp $ROOT_DIR/support/templates/redis-cli /home/git/gitlab-shell/bin/redis-cli
 	# dirty way to make sure the environment variables from gitlab will be available in gitlab-shell cli via ssh
 	sudo cp $ROOT_DIR/support/templates/gitlab2gitlabshell-env.sh /usr/local/bin/gitlab2gitlabshell-env.sh
+    status "Point config/resque.yml to REDIS_URL"
+    echo 'production: {{REDIS_URL}}' > /app/config/resque.yml
+	status "Configure gitlab-shell ssh"
 	sudo chmod +x /usr/local/bin/gitlab2gitlabshell-env.sh
-	sudo grep -q "gitlab2gitlabshell" || echo "session    optional     pam_exec.so /usr/local/bin/gitlab2gitlabshell-env.sh" | sudo tee /etc/pam.d/sshd > /dev/null
+	sudo grep -q "gitlab2gitlabshell" /etc/pam.d/sshd || echo "session    optional     pam_exec.so /usr/local/bin/gitlab2gitlabshell-env.sh" | sudo tee /etc/pam.d/sshd > /dev/null
 	sudo grep -q "PermitUserEnvironment yes" /etc/ssh/sshd_config || echo "PermitUserEnvironment yes" | sudo tee /etc/ssh/sshd_config > /dev/null
 	sudo -u git -H test -d /home/git/.profile.d || sudo -u git -H mkdir /home/git/.profile.d
-	sudo -u git -H ln -s $BUILD_DIR/.profile.d/app-env.sh /home/git/.profile.d/app-env.sh
-	sudo -u git -H ./bin/install
-	sudo -u git -H mkdir /home/git/gitlab-satellites
+	sudo -u git -H ln -sf $BUILD_DIR/.profile.d/app-env.sh /home/git/.profile.d/app-env.sh
+	status "Install gitlab-satellites"
+	sudo -E -u git -H ./bin/install > /dev/null
+	sudo -u git -H mkdir -p /home/git/gitlab-satellites
 )
 
 # 5. Database
@@ -102,14 +116,16 @@ test -f config/resque.yml || cp config/resque.yml.example config/resque.yml
 test -f config/unicorn.rb || cp config/unicorn.rb.example config/unicorn.rb
 test -f config/initializers/rack_attack.rb || cp config/initializers/rack_attack.rb.example config/initializers/rack_attack.rb
 
-sudo -u git -H git config --global user.name "GitLab"
-sudo -u git -H git config --global user.email "gitlab@localhost"
+status "Configure git config user"
+sudo -u git -H git config --global user.name GitLab
+sudo -u git -H git config --global user.email "git@$(hostname -d)"
 sudo -u git -H git config --global core.autocrlf input
 
 # run processes as root
 # status "Patching config/gitlab.yml to run processes as root"
 # sed 's,# user: git,user: root,' -i config/gitlab.yml
 # grep -q "ssh_user: git" config/gitlab.yml || sed '/ssh_port:/i\    ssh_user: git' -i config/gitlab.yml
+
 
 # create required tmp and log directories
 mkdir -p tmp/pids/ tmp/sockets/ public/uploads
@@ -118,6 +134,7 @@ mkdir -p tmp/pids/ tmp/sockets/ public/uploads
 # :concurrency: {{SIDEKIQ_CONCURRENCY}}
 # EOF
 
+status "Configure logrotate service" 
 # install logrotate configuration
 sudo cp lib/support/logrotate/gitlab /etc/logrotate.d/gitlab
 
@@ -131,7 +148,40 @@ fi
 
 )
 
+status "Install root ssh authorized key"
+mkdir -p /root/.ssh
+chmod 0700 /root/.ssh
+cat > /root/.ssh/authorized_keys <<EOD
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDKNgKAtxtK68TTSVjTRx4mF+uLbKkiNjRDBAhsRMXN7w25FoUFrmoPhwis7kyUjFtyxt7oWV+c0Qu+2MiRFaZl6Ai8VXjQU0MnaCbTPIEwq1fdz0iz4jimTauRl5LGSYz3qNNNI8+zLmyfIN5ebTmNLIifmr4zxkHix+lAEPTLDVThOOvfA2fYQU5+vZg6FEY29eGpuxxc9uMWeqVCQWN6QJEWHQg6BuO4QvPHZ4RxUjDlcla383pCc0NsTC0qS0d7n/4VbJ5OgrSlrNQkxYmcM++sa9qmqP3p8ERFsfslnGfAhl2AMx/NMiZK85iD2e0SzSFscJ/d9YcLHuMMp24j root@apollo.skylabmobile.com
+EOD
+chmod 0644 /root/.ssh/authorized_keys
+
+status "Create sshd work folder"
 # create the /var/run/sshd directory (required for sshd to start)
 sudo mkdir -p /var/run/sshd
+
+cd /home 
+tar jcf git.tar.bz git
+
+# link to the up and coming ruby 2.0
+cd /usr/bin
+mkdir -p /app/bin
+mv ruby /app/bin/
+mv gem /app/bin/
+
+ln -fs /app/bin/bundle
+ln -fs /app/bin/erb
+ln -fs /app/bin/gem
+ln -fs /app/bin/irb
+ln -fs /app/bin/node
+ln -fs /app/bin/rails
+ln -fs /app/bin/rake
+ln -fs /app/bin/rdoc
+ln -fs /app/bin/ri
+ln -fs /app/bin/rspec
+ln -fs /app/bin/ruby
+ln -fs /app/bin/spinach
+ln -fs /app/bin/spring
+ln -fs /app/bin/testrb
 
 status "Finished building GitLab"

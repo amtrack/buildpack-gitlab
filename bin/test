@@ -19,8 +19,6 @@ testCompileWithoutRedisURL() {
 
 testStable_6_5() {
 	export REDIS_URL=redis://localhost:6379
-	detect "gitlab-yml-example"
-	assertCaptured "GitLab"
 	compile "stable_6_5"
 	assertCaptured "Synchronizing package index"
 	assertCaptured "Installing python-software-properties"

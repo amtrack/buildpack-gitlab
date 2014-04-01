@@ -38,8 +38,8 @@ sudo FORCE_ADD_APT_REPOSITORY=yes add-apt-repository ppa:git-core/ppa &> /dev/nu
 status "Synchronizing package index again"
 sudo -E apt-get update -qq
 
-# status "Upgrading packages"
-# sudo -E apt-get upgrade -qq -y --force-yes -o Dpkg::Options::="--force-confold" # &> /dev/null
+status "Upgrading packages"
+sudo -E apt-get upgrade -qq -y --force-yes -o Dpkg::Options::="--force-confold" &> /dev/null
 
 status "Installing required packages"
 sudo -E apt-get install -q -y unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils git

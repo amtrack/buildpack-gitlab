@@ -13,8 +13,8 @@ testDetectWithoutGitlabYmlExample() {
 }
 
 testStable_6_5() {
-	git clone -b 6-5-stable https://github.com/gitlabhq/gitlabhq.git $bp_dir/test/stable_6_5
-	echo "cloned"
+	detect "gitlab-yml-example"
+	assertCaptured "GitLab"
 	compile "stable_6_5"
 	assertCaptured "Synchronizing package index"
 	assertCaptured "Installing python-software-properties"
@@ -78,5 +78,9 @@ compile() {
 assertFile() {
 	assertEquals "$1" "$(cat $compile_dir/$2)"
 }
+
+# oneTimeSetUp() {
+# 	$bp_dir/bin/test-setup
+# }
 
 source "$bp_dir/vendor/shunit2/shunit2"

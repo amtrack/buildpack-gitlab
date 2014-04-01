@@ -1,3 +1,4 @@
 image: progrium/cedarish
 script:
+  - bin/test-setup
   - bin/test

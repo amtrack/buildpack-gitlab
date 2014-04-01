@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+echo "setting up test environment"
+bp_dir=$(pwd)
+git clone -b 6-5-stable https://github.com/gitlabhq/gitlabhq.git $bp_dir/test/stable_6_5

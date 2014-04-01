@@ -12,7 +12,13 @@ testDetectWithoutGitlabYmlExample() {
 	assertCapturedError 1 ""
 }
 
+testCompileWithoutRedisURL() {
+	compile "no-redis-url"
+	assertCapturedError 1 "No supporting environment detected"
+}
+
 testStable_6_5() {
+	export REDIS_URL=redis://localhost:6379
 	detect "gitlab-yml-example"
 	assertCaptured "GitLab"
 	compile "stable_6_5"

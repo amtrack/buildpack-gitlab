@@ -27,24 +27,13 @@ source $BIN_DIR/utils
 cd $BUILD_DIR
 
 # 1. Packages / Dependencies
-export DEBIAN_FRONTEND=noninteractive
-status "Synchronizing package index"
-sudo -E apt-get update -qq
-
-status "Installing python-software-properties"
-sudo -E apt-get install -y python-software-properties software-properties-common
-status "Adding apt repository ppa:git-core"
-sudo FORCE_ADD_APT_REPOSITORY=yes add-apt-repository ppa:git-core/ppa &> /dev/null
-status "Synchronizing package index again"
-sudo -E apt-get update -qq
-
-status "Upgrading packages"
-sudo -E apt-get upgrade -qq -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" &> /dev/null
-
 status "Installing required packages"
-sudo -E apt-get install -q -y unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils git
-
-status "Cleaning up"
+export DEBIAN_FRONTEND=noninteractive
+sudo -E apt-get update -qq > /dev/null
+sudo -E apt-get install -y python-software-properties software-properties-common > /dev/null
+sudo FORCE_ADD_APT_REPOSITORY=yes add-apt-repository ppa:git-core/ppa &> /dev/null
+sudo -E apt-get update -qq > /dev/null
+sudo -E apt-get install -qq -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils git > /dev/null
 sudo -E apt-get clean
 
 # 2. Ruby

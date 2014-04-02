@@ -20,13 +20,7 @@ testCompileWithoutRedisURL() {
 testStable_6_5() {
 	export REDIS_URL=redis://localhost:6379
 	compile "stable_6_5"
-	assertCaptured "Synchronizing package index"
-	assertCaptured "Installing python-software-properties"
-	assertCaptured "Adding apt repository ppa:git-core"
-	assertCaptured "Synchronizing package index again"
-	# assertCaptured "Upgrading packages"
 	assertCaptured "Installing required packages"
-	assertCaptured "Cleaning up"
 	assertCaptured "Configuring git user"
 	assertCaptured "Finished building GitLab"
 	assertCapturedSuccess

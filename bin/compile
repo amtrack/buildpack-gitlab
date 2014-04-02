@@ -7,6 +7,9 @@
 # fail fast
 set -e
 
+# Debug mode
+[[ $DEBUG ]] && set -x
+
 # parse and derive params
 BUILD_DIR=$1
 CACHE_DIR=$2

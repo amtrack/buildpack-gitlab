@@ -1,0 +1,5 @@
+#!/bin/bash
+[[ ! $1 ]] && echo -e "Usage:\n\t${0##*/} <app name>" && exit 1
+
+ssh dokku run $1 bundle exec rake db:setup RAILS_ENV=production
+ssh dokku run $1 bundle exec rake db:seed_fu RAILS_ENV=production

@@ -1,0 +1,28 @@
+#!/bin/bash
+[[ ! $1 ]] && echo -e "Usage:\n\t${0##*/} <app name>" && exit 1
+
+# If you have trouble with the CONTAINER not being created use plugn nickl-/dokku-container
+#ssh dokku container:create $1
+
+ssh dokku config:set $1 BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
+ssh dokku config:set $1 CURL_TIMEOUT=120
+ssh dokku config:set $1 SMTP_URL=smtp://gitl:iHoGmZ8HLnIXP-Y@smtp.skylabmobile.co.za/?domain=skylabmobile.co.za
+# Once the postgres db is created fou can simply configure the DATABASE_URL  
+
+ssh dokku config:set $1 DATABASE_URL=postgres://gitlab:ceWVxa1pKaDNhcWxudXpvWT0K@172.17.0.6:5432/gitlab_production 
+#ssh dokku postgresql:create $1
+
+ssh dokku redis:create $1
+
+# if you don't want to share git user home you should at least provide
+# external storage for the repositeries and authorived keys
+#ssh dokku docker-options:add $1 -v /opt/gitlab/repositories:/home/git/repositories:rw
+#ssh dokku docker-options:add $1 -v /opt/gitlab/.ssh:/home/git/.ssh:rw
+ssh dokku docker-options:add $1 -v /home/git:/home/git:rw
+
+ssh dokku docker-options:add $1 -h gitlab.skylabmobile.co.za
+
+# Add certs to /etc/ssl/certs and push the links to enable ssl
+# requires PR #518 
+# ssh dokku nginx:import-ssl gitlab < certs.tar
+

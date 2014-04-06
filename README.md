@@ -11,10 +11,16 @@ Checkout gitlabhq:
 
 	$ git clone https://github.com/gitlabhq/gitlabhq.git
 	$ cd gitlabhq
+
+Prepare your application for deploying to `dokku`:
+
 	$ git checkout -b deployment
     $ echo -e "https://github.com/amtrack/buildpack-gitlab.git\nhttps://github.com/heroku/heroku-buildpack-ruby.git" > .buildpacks
 	$ git add .buildpacks
 	$ git commit -m "prepare for dokku"
+
+Create a dokku application on the server:
+
 	$ git remote add dokku <your-dokku-url>
 	$ git push dokku deployment:master # will fail
 
@@ -31,7 +37,7 @@ Configure the app on your dokku server:
 	-p 2222:22
 	EOF
 
-Push again:
+Push the application:
 
 	$ git push dokku deployment:master
 

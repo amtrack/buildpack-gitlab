@@ -36,7 +36,7 @@ sudo -E apt-get update -qq > /dev/null
 sudo -E apt-get install -y python-software-properties software-properties-common > /dev/null
 sudo FORCE_ADD_APT_REPOSITORY=yes add-apt-repository ppa:git-core/ppa &> /dev/null
 sudo -E apt-get update -qq > /dev/null
-sudo -E apt-get install -qq -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils git > /dev/null
+sudo -E apt-get install -qq -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils git &> /dev/null
 sudo -E apt-get clean
 
 # 2. Ruby
@@ -47,6 +47,7 @@ status "Configuring git user"
 sudo adduser --disabled-login --gecos 'GitLab' git
 
 # 4. GitLab shell
+status "Downloading gitlab-shell"
 sudo -u git -H mkdir -p /home/git/gitlab-shell
 wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/v1.8.0.tar.gz | sudo -u git -H tar xz --strip=1 -C /home/git/gitlab-shell/
 
@@ -65,6 +66,7 @@ wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/v1.8.0.tar.gz | sudo 
 	sudo grep -q "PermitUserEnvironment yes" /etc/ssh/sshd_config || echo "PermitUserEnvironment yes" | sudo tee /etc/ssh/sshd_config > /dev/null
 	sudo -u git -H test -d /home/git/.profile.d || sudo -u git -H mkdir /home/git/.profile.d
 	sudo -u git -H ln -s $BUILD_DIR/.profile.d/app-env.sh /home/git/.profile.d/app-env.sh
+	status "Installing gitlab-shell"
 	sudo -E -u git -H ./bin/install
 	sudo -u git -H mkdir /home/git/gitlab-satellites
 )
@@ -72,10 +74,6 @@ wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/v1.8.0.tar.gz | sudo 
 # 5. Database
 
 # 6. GitLab
-
-(
-
-cd $BUILD_DIR # /app
 
 # TODO: convert to patch
 sed 's/web:.*/web: bundle exec unicorn_rails -p $PORT -E $RACK_ENV/' -i Procfile
@@ -123,8 +121,6 @@ if [ ! -f config/initializers/smtp_settings.rb ]; then
 	status "Writing config/initializers/smtp_settings.rb to read from SMTP_URL"
 	cp $ROOT_DIR/support/templates/smtp_settings.rb config/initializers/smtp_settings.rb
 fi
-
-)
 
 # create the /var/run/sshd directory (required for sshd to start)
 sudo mkdir -p /var/run/sshd

@@ -1,4 +1,6 @@
 image: progrium/cedarish
+env:
+  - LANG=C
 script:
   - bin/test-setup
   - bin/test

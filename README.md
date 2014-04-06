@@ -2,8 +2,7 @@
 
 This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for [GitLab](http://gitlab.org/).
 
-[![Build Status](https://secure.travis-ci.org/amtrack/buildpack-gitlab.png?branch=master)](http://travis-ci.org/amtrack/buildpack-gitlab)
-[![Build Status](https://drone.io/github.com/amtrack/buildpack-gitlab/status.png)](https://drone.io/github.com/amtrack/buildpack-gitlab/latest)
+[![Build Status](http://mrolke.de:8080/github.com/amtrack/buildpack-gitlab/status.svg?branch=master)](http://mrolke.de:8080/github.com/amtrack/buildpack-gitlab)
 
 ## Usage
 

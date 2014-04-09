@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 echo "setting up test environment"
 bp_dir=$(pwd)
-stable_6_5="$bp_dir/test/stable_6_5"
-[[ -d $stable_6_5 ]] || git clone -b 6-5-stable https://github.com/gitlabhq/gitlabhq.git $stable_6_5
+gitlabhq_latest_stable="$bp_dir/test/latest_stable"
+[[ -d $gitlabhq_latest_stable ]] || git clone -b 6-7-stable https://github.com/gitlabhq/gitlabhq.git $gitlabhq_latest_stable

@@ -4,54 +4,90 @@ This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) fo
 
 [![Build Status](http://mrolke.de:8080/github.com/amtrack/buildpack-gitlab/status.svg?branch=master)](http://mrolke.de:8080/github.com/amtrack/buildpack-gitlab)
 
-## Usage
+## Getting started
 
-Checkout gitlabhq:
+### Check requirements
+
+First make sure you have all required `dokku` plugins installed on your dokku server. See [here](#requirements).
+
+### Checkout gitlabhq
 
 	$ git clone https://github.com/gitlabhq/gitlabhq.git
 	$ cd gitlabhq
 
-Prepare your application for deploying to `dokku`:
+### Prepare your application for deploying to `dokku`
 
 	$ git checkout -b deployment
     $ echo -e "https://github.com/amtrack/buildpack-gitlab.git\nhttps://github.com/heroku/heroku-buildpack-ruby.git" > .buildpacks
 	$ git add .buildpacks
 	$ git commit -m "prepare for dokku"
 
-Create a dokku application on the server:
+### Create a dokku application on the server
 
 	$ git remote add dokku <your-dokku-url>
 	$ git push dokku deployment:master # will fail
 
-Configure the app on your dokku server:
+### Configure the app on your dokku server
 
 	$ dokku config:set gitlab BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
 	$ dokku config:set gitlab CURL_TIMEOUT=120
-	$ dokku config:set gitlab SMTP_URL=smtps://user:password@smtp.gmail.com/?domain=gmail.com
 	$ dokku mariadb:create gitlab
 	$ dokku redis:create gitlab
-	$ cat < /home/dokku/gitlab/DOCKER_ARGS EOF
-	-v /opt/gitlab/repositories:/home/git/repositories
-	-v /opt/gitlab/.ssh:/home/git/.ssh
-	-p 2222:22
-	EOF
 
-Push the application:
+### Push the application
 
 	$ git push dokku deployment:master
 
-Seed the database:
+### Seed the database
 
 	$ dokku run gitlab bundle exec rake db:setup RAILS_ENV=production
 	$ dokku run gitlab bundle exec rake db:seed_fu RAILS_ENV=production
 
-## Required dokku plugins
+### Test the deployment
+
+Open `https://gitlab.<yourdomain>` in your browser.
+
+## Advanced usage
+
+### Persistent storage
+
+Create some folders for persistent storage:
+
+	$ test -d /opt/gitlab/repositories || sudo mkdir -p /opt/gitlab/repositories
+	$ test -d /opt/gitlab/.ssh || sudo mkdir -p /opt/gitlab/.ssh
+
+Set some docker options for persistent storage:
+
+	$ dokku docker-options:add gitlab "-v /opt/gitlab/repositories:/home/git/repositories"
+	$ dokku docker-options:add gitlab "-v /opt/gitlab/.ssh:/home/git/.ssh"
+
+Rebuild the app to apply the docker options:
+
+	$ dokku rebuild gitlab
+
+Note: You will have to seed the database again after setting up persistent storage.
+
+### Exposing the SSH port to access the git repositories
+
+See instruction at [GitLab Installation Guide](https://github.com/gitlabhq/gitlabhq/blob/master/doc/install/installation.md#user-content-custom-ssh-connection).
+
+Additionally you will need to set this docker option:
+
+	$ dokku docker-options:add gitlab "-p 2222:22"
+	$ dokku rebuild gitlab
+
+### Setting the SMTP credentials
+
+	$ dokku config:set gitlab SMTP_URL=smtps://<user>:<password>@smtp.gmail.com/?domain=gmail.com
+
+## <a name="requirements"></a>Required dokku plugins
 
  * [dokku-user-env-compile](https://github.com/musicglue/dokku-user-env-compile)
  * [dokku-supervisord](https://github.com/statianzo/dokku-supervisord)
- * [dokku-postgres-plugin](https://github.com/jezdez/dokku-postgres-plugin) or [dokku-md-plugin](https://github.com/Kloadut/dokku-md-plugin)
+ * [dokku-md-plugin](https://github.com/Kloadut/dokku-md-plugin)
  * [dokku-redis-plugin](https://github.com/luxifer/dokku-redis-plugin)
- * [dokku-docker-args](https://github.com/amtrack/dokku-docker-args) or [dokku-persistent-storage](https://github.com/dyson/dokku-persistent-storage)
+ * [dokku-docker-options](https://github.com/dyson/dokku-docker-options)
+ * [dokku-rebuild](https://github.com/scottatron/dokku-rebuild)
 
 ## Info
 

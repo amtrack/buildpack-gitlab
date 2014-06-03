@@ -1,7 +1,0 @@
-language: ruby
-rvm:
-  - 2.0.0
-before_script: ./bin/test-setup
-script: ./bin/test
-notifications:
-  email: false

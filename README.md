@@ -80,6 +80,11 @@ Additionally you will need to set this docker option:
 
 	$ dokku config:set gitlab SMTP_URL=smtps://<user>:<password>@smtp.gmail.com/?domain=gmail.com
 
+### Specifying the gitlab-shell version
+Currently the default `gitlab-shell` version is set to `v1.9.4`. If you want to use another version you can do this via the environment variable `GITLAB_SHELL_VERSION`.
+
+	$ dokku config:set gitlab GITLAB_SHELL_VERSION=v1.9.4
+
 ## <a name="requirements"></a>Required dokku plugins
 
  * [dokku-user-env-compile](https://github.com/musicglue/dokku-user-env-compile)

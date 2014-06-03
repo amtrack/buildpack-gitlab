@@ -77,8 +77,8 @@ assertFile() {
 	assertEquals "$1" "$(cat $compile_dir/$2)"
 }
 
-# oneTimeSetUp() {
-# 	$bp_dir/bin/test-setup
-# }
+oneTimeSetUp() {
+	$bp_dir/bin/test-setup
+}
 
 source "$bp_dir/vendor/shunit2/shunit2"

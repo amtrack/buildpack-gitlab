@@ -1,4 +1,4 @@
-# Heroku buildpack: GitLab
+# Heroku buildpack: GitLab (work in progress)
 
 This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for [GitLab](http://gitlab.org/).
 
@@ -6,9 +6,11 @@ This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) fo
 
 ## Getting started
 
-### Check requirements
+### Requirements
 
-First make sure you have all required `dokku` plugins installed on your dokku server. See [here](#requirements).
+* [dokku](https://github.com/progrium/dokku) (heroku has only an *ephemeral filesystem*)
+* All of [these dokku plugins](#requirements)
+* At least **1GB of RAM** and **swap enabled**
 
 ### Checkout gitlabhq
 
@@ -29,10 +31,10 @@ First make sure you have all required `dokku` plugins installed on your dokku se
 
 ### Configure the app on your dokku server
 
-	$ dokku config:set gitlab BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
-	$ dokku config:set gitlab CURL_TIMEOUT=120
-	$ dokku mariadb:create gitlab
-	$ dokku redis:create gitlab
+	root@vps:$ dokku config:set gitlab BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
+	root@vps:$ dokku config:set gitlab CURL_TIMEOUT=120
+	root@vps:$ dokku mariadb:create gitlab
+	root@vps:$ dokku redis:create gitlab
 
 ### Push the application
 
@@ -40,8 +42,8 @@ First make sure you have all required `dokku` plugins installed on your dokku se
 
 ### Seed the database
 
-	$ dokku run gitlab bundle exec rake db:setup RAILS_ENV=production
-	$ dokku run gitlab bundle exec rake db:seed_fu RAILS_ENV=production
+	root@vps:$ dokku run gitlab bundle exec rake db:setup RAILS_ENV=production
+	root@vps:$ dokku run gitlab bundle exec rake db:seed_fu RAILS_ENV=production
 
 ### Test the deployment
 
@@ -53,37 +55,52 @@ Open `https://gitlab.<yourdomain>` in your browser.
 
 Create some folders for persistent storage:
 
-	$ test -d /opt/gitlab/repositories || sudo mkdir -p /opt/gitlab/repositories
-	$ test -d /opt/gitlab/.ssh || sudo mkdir -p /opt/gitlab/.ssh
+	root@vps:$ test -d /opt/gitlab/repositories || sudo mkdir -p /opt/gitlab/repositories
+	root@vps:$ test -d /opt/gitlab/.ssh || sudo mkdir -p /opt/gitlab/.ssh
 
 Set some docker options for persistent storage:
 
-	$ dokku docker-options:add gitlab "-v /opt/gitlab/repositories:/home/git/repositories"
-	$ dokku docker-options:add gitlab "-v /opt/gitlab/.ssh:/home/git/.ssh"
+	root@vps:$ dokku docker-options:add gitlab "-v /opt/gitlab/repositories:/home/git/repositories"
+	root@vps:$ dokku docker-options:add gitlab "-v /opt/gitlab/.ssh:/home/git/.ssh"
 
 Rebuild the app to apply the docker options:
 
-	$ dokku rebuild gitlab
+	root@vps:$ dokku rebuild gitlab
 
-Note: You will have to seed the database again after setting up persistent storage.
+### Exposing the SSH port to access the git repositories (work in progress)
 
-### Exposing the SSH port to access the git repositories
+You will need to make some changes in the `config/gitlab.yml` file (see instruction at [GitLab Installation Guide](https://github.com/gitlabhq/gitlabhq/blob/master/doc/install/installation.md#user-content-custom-ssh-connection))
+and expose the containers port `22` to the host port `2222` (for example).
 
-See instruction at [GitLab Installation Guide](https://github.com/gitlabhq/gitlabhq/blob/master/doc/install/installation.md#user-content-custom-ssh-connection).
+First tell dokku to expose the port when the app is build again
 
-Additionally you will need to set this docker option:
+	root@vps:$ dokku docker-options:add gitlab "-p 2222:22"
 
-	$ dokku docker-options:add gitlab "-p 2222:22"
-	$ dokku rebuild gitlab
+Then create the config based on the example config file
+
+	$ cp config/gitlab.yml.example config/gitlab.yml
+	$ git add -f config/gitlab.yml
+	$ git commit -am "force add config/gitlab.yml"
+
+Make the following changes
+
+	* gitlab.host: gitlab.<yourdomain>
+	* gitlab_shell.ssh_port: 2222
+
+Commit and push the changes
+
+	$ git commit -am "expose repositories on port 2222 via SSH"
+	$ git push dokku deployment:master
 
 ### Setting the SMTP credentials
 
-	$ dokku config:set gitlab SMTP_URL=smtps://<user>:<password>@smtp.gmail.com/?domain=gmail.com
+	root@vps:$ dokku config:set gitlab SMTP_URL=smtps://<user>:<password>@smtp.gmail.com/?domain=gmail.com
 
 ### Specifying the gitlab-shell version
-Currently the default `gitlab-shell` version is set to `v1.9.4`. If you want to use another version you can do this via the environment variable `GITLAB_SHELL_VERSION`.
 
-	$ dokku config:set gitlab GITLAB_SHELL_VERSION=v1.9.4
+Currently the default `gitlab-shell` version is set to `v1.9.5`. If you want to use another version you can do this via the environment variable `GITLAB_SHELL_VERSION`.
+
+	root@vps:$ dokku config:set gitlab GITLAB_SHELL_VERSION=v1.9.X
 
 ## <a name="requirements"></a>Required dokku plugins
 

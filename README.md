@@ -47,6 +47,8 @@ This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) fo
 
 ### Test the deployment
 
+	root@vps:$ dokku run gitlab bundle exec rake gitlab:check RAILS_ENV=production
+
 Open `https://gitlab.<yourdomain>` in your browser.
 
 ## Advanced usage
@@ -55,8 +57,8 @@ Open `https://gitlab.<yourdomain>` in your browser.
 
 Create some folders for persistent storage:
 
-	root@vps:$ test -d /opt/gitlab/repositories || sudo mkdir -p /opt/gitlab/repositories
-	root@vps:$ test -d /opt/gitlab/.ssh || sudo mkdir -p /opt/gitlab/.ssh
+	root@vps:$ test -d /opt/gitlab/repositories || sudo mkdir -p /opt/gitlab/repositories; sudo chown -R dokku:root /opt/gitlab/repositories
+	root@vps:$ test -d /opt/gitlab/.ssh || sudo mkdir -p /opt/gitlab/.ssh; sudo chown -R dokku:root /opt/gitlab/.ssh
 
 Set some docker options for persistent storage:
 

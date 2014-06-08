@@ -4,9 +4,12 @@ require 'cgi'
 require 'uri'
 
 begin
-  redis_url = URI.parse(ENV["REDIS_URL"])
+  if File.file?('/home/git/.ssh/REDIS_URL')
+    ENV['REDIS_URL'] = File.read('/home/git/.ssh/REDIS_URL').strip
+  end
+  redis_url = URI.parse(ENV['REDIS_URL'])
 rescue URI::InvalidURIError
-  raise "Invalid REDIS_URL"
+  raise "Invalid REDIS_URL: #{ENV['REDIS_URL']}"
 end
 
 %>

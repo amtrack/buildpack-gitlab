@@ -1,0 +1,2 @@
+#!/bin/sh
+echo $REDIS_URL > /home/git/.ssh/REDIS_URL

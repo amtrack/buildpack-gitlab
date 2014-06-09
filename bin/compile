@@ -99,6 +99,7 @@ test -f config/gitlab.yml || cp config/gitlab.yml.example config/gitlab.yml
 test -f config/resque.yml || cp config/resque.yml.example config/resque.yml
 
 test -f config/unicorn.rb || cp config/unicorn.rb.example config/unicorn.rb
+sed 's,/home/git/gitlab,/app,' -i config/unicorn.rb
 test -f config/initializers/rack_attack.rb || cp config/initializers/rack_attack.rb.example config/initializers/rack_attack.rb
 
 sudo -u git -H git config --global user.name "GitLab"

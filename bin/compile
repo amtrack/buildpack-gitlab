@@ -120,6 +120,7 @@ mkdir -p tmp/pids/ tmp/sockets/ public/uploads
 
 # install logrotate configuration
 sudo cp lib/support/logrotate/gitlab /etc/logrotate.d/gitlab
+sudo sed 's,/home/git/gitlab/,/app/,' -i /etc/logrotate.d/gitlab
 
 # 7. Nginx
 # not required

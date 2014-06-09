@@ -55,14 +55,20 @@ Open `https://gitlab.<yourdomain>` in your browser.
 
 ### Persistent storage
 
+It is highly recommended to run these steps as early as possible after having deployed gitlab.
+
 Create some folders for persistent storage:
 
-	root@vps:$ test -d /opt/gitlab/repositories || sudo mkdir -p /opt/gitlab/repositories; sudo chown -R dokku:root /opt/gitlab/repositories
-	root@vps:$ test -d /opt/gitlab/.ssh || sudo mkdir -p /opt/gitlab/.ssh; sudo chown -R dokku:root /opt/gitlab/.ssh
+	root@vps:$ test -d /opt/gitlab/repositories || sudo mkdir -p /opt/gitlab/repositories; sudo chown -R dokku:dokku /opt/gitlab/repositories
+	root@vps:$ test -d /opt/gitlab/gitlab-satellites || sudo mkdir -p /opt/gitlab/gitlab-satellites; sudo chown -R dokku:dokku /opt/gitlab/gitlab-satellites
+	root@vps:$ test -d /opt/gitlab/log || sudo mkdir -p /opt/gitlab/log; sudo chown -R dokku:dokku /opt/gitlab/log
+	root@vps:$ test -d /opt/gitlab/.ssh || sudo mkdir -p /opt/gitlab/.ssh; sudo chown -R dokku:dokku /opt/gitlab/.ssh
 
 Set some docker options for persistent storage:
 
 	root@vps:$ dokku docker-options:add gitlab "-v /opt/gitlab/repositories:/home/git/repositories"
+	root@vps:$ dokku docker-options:add gitlab "-v /opt/gitlab/gitlab-satellites:/home/git/gitlab-satellites"
+	root@vps:$ dokku docker-options:add gitlab "-v /opt/gitlab/log:/app/log"
 	root@vps:$ dokku docker-options:add gitlab "-v /opt/gitlab/.ssh:/home/git/.ssh"
 
 Rebuild the app to apply the docker options:

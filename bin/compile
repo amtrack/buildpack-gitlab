@@ -81,8 +81,6 @@ sudo chown -R git:root /home/git/.ssh/
 
 # 6. GitLab
 
-# TODO: convert to patch
-sed 's/web:.*/web: bundle exec unicorn_rails -p $PORT -E $RACK_ENV/' -i Procfile
 grep -q "sshd" Procfile || echo "sshd: /usr/sbin/sshd -D" >> Procfile
 
 if git apply --check $ROOT_DIR/support/patches/resque_url_4_sidekiq.rb.patch &> /dev/null; then

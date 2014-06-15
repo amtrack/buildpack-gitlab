@@ -29,6 +29,10 @@ source $BIN_DIR/utils
 
 cd $BUILD_DIR
 
+# 0. configure sudo
+sudo sed '/env_reset/s/^/#/g' -i /etc/sudoers
+sudo sed '/secure_path/s/^/#/g' -i /etc/sudoers
+
 # 1. Packages / Dependencies
 status "Installing required packages"
 export DEBIAN_FRONTEND=noninteractive
@@ -80,6 +84,7 @@ sudo chown -R git:root /home/git/.ssh/
 
 # 6. GitLab
 
+sed 's/: bundle/: sudo -E -u git -H bundle/g' -i Procfile
 grep -q "sshd" Procfile || echo "sshd: /usr/sbin/sshd -D" >> Procfile
 
 if git apply --check $ROOT_DIR/support/patches/resque_url_4_sidekiq.rb.patch &> /dev/null; then

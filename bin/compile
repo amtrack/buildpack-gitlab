@@ -67,6 +67,7 @@ wget -qO- https://github.com/gitlabhq/gitlab-shell/archive/${GITLAB_SHELL_VERSIO
 	sudo grep -q "PermitUserEnvironment yes" /etc/ssh/sshd_config || echo "PermitUserEnvironment yes" | sudo tee -a /etc/ssh/sshd_config > /dev/null
 	sudo -u git -H test -d /home/git/.profile.d || sudo -u git -H mkdir /home/git/.profile.d
 	sudo -u git -H ln -s $BUILD_DIR/.profile.d/app-env.sh /home/git/.profile.d/app-env.sh
+	sudo -u git -H mkdir log
 	status "Installing gitlab-shell"
 	sudo -E -u git -H ./bin/install
 	sudo -u git -H mkdir /home/git/gitlab-satellites

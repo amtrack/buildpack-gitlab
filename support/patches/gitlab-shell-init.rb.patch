@@ -1,0 +1,18 @@
+diff --git a/lib/gitlab_init.rb b/lib/gitlab_init.rb
+index c3f35a2..b8dc491 100644
+--- a/lib/gitlab_init.rb
++++ b/lib/gitlab_init.rb
+@@ -1,3 +1,12 @@
+ ROOT_PATH = File.expand_path(File.join(File.dirname(__FILE__), ".."))
+ 
+ require_relative 'gitlab_config'
++
++# Make sure running as GitLab user defined in config.yml
++begin
++  config = GitlabConfig.new
++  pwnam = Etc.getpwnam(config.config['user'])
++  Process.egid = pwnam.uid
++  Process.euid = pwnam.gid
++rescue
++end
+\ No newline at end of file

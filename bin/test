@@ -22,6 +22,10 @@ testLatestStable() {
 	compile "latest_stable"
 	assertCaptured "Installing required packages"
 	assertCaptured "Configuring git user"
+	assertCaptured "Patching gitlab-shell/lib/gitlab_config.rb"
+	assertCaptured "Patching gitlab-shell/lib/gitlab_init.rb"
+	assertCaptured "Patching config/initializers/4_sidekiq.rb"
+	assertCaptured "Patching config/environments/production.rb"
 	assertCaptured "Finished building GitLab"
 	assertCapturedSuccess
 }

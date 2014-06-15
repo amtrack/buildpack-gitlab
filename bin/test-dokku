@@ -36,13 +36,13 @@ testConfigureGitlabApp() {
 }
 
 testPersistStorage() {
-	mkdir -p /opt/gitlab/{repositories,gitlab-satellites,log,.ssh}
+	mkdir -p /opt/gitlab/{repositories,gitlab-satellites,log,.ssh,gitlab-shell/log}
 	chown -R dokku:dokku /opt/gitlab
 	dokku docker-options:add gitlab "-v /opt/gitlab/repositories:/home/git/repositories"
 	dokku docker-options:add gitlab "-v /opt/gitlab/gitlab-satellites:/home/git/gitlab-satellites"
 	dokku docker-options:add gitlab "-v /opt/gitlab/log:/app/log"
 	dokku docker-options:add gitlab "-v /opt/gitlab/.ssh:/home/git/.ssh"
-	dokku docker-options:add gitlab "-v /opt/gitlab/gitlab-shell-log:/home/git/gitlab-shell/log"
+	dokku docker-options:add gitlab "-v /opt/gitlab/gitlab-shell/log:/home/git/gitlab-shell/log"
 }
 
 testDeployGitlabApp() {

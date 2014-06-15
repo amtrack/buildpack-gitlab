@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+[[ $DEBUG ]] && set -x
+
+if [ -z "${DOKKU_SERVER}" ]; then
+	echo "DOKKU_SERVER needs to be specified: e.g. example.com";
+	exit 1;
+fi
+DOKKU_SSH_USER="${DOKKU_SSH_USER:-root}"
+DOKKU_SSH="${DOKKU_SSH:-$DOKKU_SSH_USER@$DOKKU_SERVER}"
+BRANCH="${DRONE_BRANCH:-master}"
+BUILDPACK_GITLAB_URL="${BUILDPACK_GITLAB_URL:-https://github.com/amtrack/buildpack-gitlab.git#${BRANCH}}"
+GITLAB_BRANCH="${GITLAB_BRANCH:-master}"
+
+echo "scheduling tests to be remotely executed on: $DOKKU_SSH"
+
+pushd $(dirname 0) >/dev/null
+bp_dir=$(pwd)
+popd >/dev/null
+
+ssh $DOKKU_SSH "apt-get install shunit2 jq"
+scp $bp_dir/bin/test-dokku $DOKKU_SSH:/tmp/
+ssh $DOKKU_SSH "chmod +x /tmp/test-dokku; BUILDPACK_GITLAB_URL=$BUILDPACK_GITLAB_URL GITLAB_BRANCH=$GITLAB_BRANCH /tmp/test-dokku; echo \$? > /tmp/test-dokku.rc"
+scp $DOKKU_SSH:/tmp/test-dokku.rc .
+ret=$(cat test-dokku.rc)
+exit $ret

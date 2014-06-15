@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# run this test only on a test server with dokku installed and configured.
+
+[[ $DEBUG ]] && set -x
+
+export BRANCH="${BRANCH:-master}"
+export BUILDPACK_GITLAB_URL="${BUILDPACK_GITLAB_URL:-https://github.com/amtrack/buildpack-gitlab.git#${BRANCH}}"
+export GITLAB_BRANCH="${GITLAB_BRANCH:-master}"
+
+echo "running tests for buildpack: $BUILDPACK_GITLAB_URL using gitlabhq branch: $GITLAB_BRANCH"
+
+testPrepareGitlabhq() {
+	git clone -b $GITLAB_BRANCH https://github.com/gitlabhq/gitlabhq.git /tmp/gitlabhq
+	pushd /tmp/gitlabhq
+	git checkout -b deployment
+	echo -e "$BUILDPACK_GITLAB_URL\nhttps://github.com/heroku/heroku-buildpack-ruby.git" > .buildpacks
+	git add .buildpacks
+	git commit -m 'prepare for dokku'
+	git remote add dokku dokku@localhost:gitlab
+	popd
+}
+
+testCreateGitlabApp() {
+	pushd /tmp/gitlabhq
+	git push dokku deployment:master
+	rc=$?
+	assertNotEquals 0 $rc
+	popd
+}
+
+testConfigureGitlabApp() {
+	dokku config:set gitlab BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
+	dokku config:set gitlab CURL_TIMEOUT=120
+	dokku mariadb:create gitlab
+	dokku redis:create gitlab
+}
+
+testPersistStorage() {
+	mkdir -p /opt/gitlab/{repositories,gitlab-satellites,log,.ssh}
+	chown -R dokku:dokku /opt/gitlab
+	dokku docker-options:add gitlab "-v /opt/gitlab/repositories:/home/git/repositories"
+	dokku docker-options:add gitlab "-v /opt/gitlab/gitlab-satellites:/home/git/gitlab-satellites"
+	dokku docker-options:add gitlab "-v /opt/gitlab/log:/app/log"
+	dokku docker-options:add gitlab "-v /opt/gitlab/.ssh:/home/git/.ssh"
+	dokku docker-options:add gitlab "-v /opt/gitlab/gitlab-shell-log:/home/git/gitlab-shell/log"
+}
+
+testDeployGitlabApp() {
+	pushd /tmp/gitlabhq
+	git push dokku deployment:master
+	rc=$?
+	assertEquals 0 $rc
+	popd
+}
+
+testSeedDatabase() {
+	dokku run gitlab bundle exec rake db:setup RAILS_ENV=production
+	dokku run gitlab bundle exec rake db:seed_fu RAILS_ENV=production
+	sleep 10
+}
+
+testGitlabApi() {
+	export private_token=$(curl -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d '{"login":"root", "password":"5iveL!fe"}' "http://gitlab.$(hostname -d)/api/v3/session" | jq -r '.private_token')
+	assertNotNull "private token is null" $private_token
+	response=$(curl -H "PRIVATE-TOKEN: $private_token" -H "Accept: application/json" -H "Content-Type: application/json" -X PUT -d '{"password":"asdf1234"}' "http://gitlab.$(hostname -d)/api/v3/users/1")
+	assertNotNull "changing password failed" "$(echo $response | jq -r .id)"
+	response=$(curl -H "PRIVATE-TOKEN: $private_token" -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d '{"title":"root@localhost","key":"'"$(<~/.ssh/id_rsa.pub)"'"}' "http://gitlab.$(hostname -d)/api/v3/user/keys")
+	assertNotNull "adding ssh key failed" "$(echo $response | jq -r .id)"
+	response=$(curl -H "PRIVATE-TOKEN: $private_token" -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d '{"name":"dummy","issues_enabled":"false","public":"false"}' "http://gitlab.$(hostname -d)/api/v3/projects")
+	assertNotNull "creating project failed" "$(echo $response | jq -r .id)"
+}
+
+testWorkaround() {
+	sleep 5
+	chown -R dokku:dokku /opt/gitlab
+}
+
+testCreateDummyRepo() {
+	mkdir -p /tmp/dummy
+	pushd /tmp/dummy
+	git init; touch README; git add README; git commit -m 'first commit'
+	GITLAB_CONTAINER_ID=$(docker ps | grep dokku/gitlab | cut -d ' ' -f 1)
+	assertNotNull "gitlab container not found" $GITLAB_CONTAINER_ID
+	GITLAB_CONTAINER_IP=$(docker inspect $GITLAB_CONTAINER_ID | jq -r '.[0].NetworkSettings.IPAddress')
+	assertNotNull "gitlab container ip not found" $GITLAB_CONTAINER_IP
+	git remote add origin git@$GITLAB_CONTAINER_IP:root/dummy.git
+	popd
+}
+
+testPushDummyRepo() {
+	pushd /tmp/dummy
+	git push origin master
+	rc=$?
+	assertEquals 0 $rc
+	popd
+}
+
+oneTimeSetUp() {
+	test -d /tmp/dummy && rm -rf /tmp/dummy
+	test -d /tmp/gitlabhq && rm -rf /tmp/gitlabhq
+	(docker ps | grep redis/gitlab) && dokku redis:delete gitlab
+	(docker ps | grep mariadb/gitlab) && dokku mariadb:delete gitlab
+	dokku delete gitlab
+	docker rm -f $(docker ps -a -q)
+	rm -rf /home/dokku/.redis/*-gitlab
+	rm -rf /home/dokku/.mariadb/*_gitlab
+	test -d /opt/gitlab && rm -rf /opt/gitlab
+
+	test -f ~/.ssh/id_rsa || ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa
+	cat ~/.ssh/id_rsa.pub | sshcommand acl-add dokku $(whoami)@$(hostname)
+	echo "eval \$(ssh-agent); ssh-add" > ~/.bash_profile
+	git config --global user.name 'Your Name'
+	git config --global user.email you@example.com
+	echo -e "Host *\n  StrictHostKeyChecking no" > ~/.ssh/config
+}
+
+source shunit2

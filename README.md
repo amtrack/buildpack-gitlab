@@ -2,7 +2,7 @@
 
 This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for [GitLab](http://gitlab.org/).
 
-[![Build Status](http://mrolke.de:8080/github.com/amtrack/buildpack-gitlab/status.svg?branch=master)](http://mrolke.de:8080/github.com/amtrack/buildpack-gitlab)
+[![Build Status](https://drone.mrolke.de/github.com/amtrack/buildpack-gitlab/status.svg?branch=master)](https://drone.mrolke.de/github.com/amtrack/buildpack-gitlab) master
 
 ## Getting started
 

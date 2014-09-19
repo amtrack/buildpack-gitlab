@@ -36,7 +36,7 @@ sudo -E apt-get update -qq > /dev/null
 sudo -E apt-get install -y python-software-properties software-properties-common > /dev/null
 sudo FORCE_ADD_APT_REPOSITORY=yes add-apt-repository ppa:git-core/ppa &> /dev/null
 sudo -E apt-get update -qq > /dev/null
-sudo -E apt-get install -qq -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils git &> /dev/null
+sudo -E apt-get install -qq -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" unzip checkinstall libyaml-dev libgdbm-dev libreadline-dev libncurses5-dev libffi-dev libicu-dev redis-server python-docutils git cmake &> /dev/null
 sudo -E apt-get clean
 
 # 2. Ruby

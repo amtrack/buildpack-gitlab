@@ -2,5 +2,5 @@
 echo "setting up test environment"
 bp_dir=$(pwd)
 gitlabhq_dir="$bp_dir/test/latest_stable"
-gitlabhq_branch="6-9-stable"
+gitlabhq_branch="7-2-stable"
 [[ -d $gitlabhq_dir ]] || git clone -b $gitlabhq_branch https://github.com/gitlabhq/gitlabhq.git $gitlabhq_dir

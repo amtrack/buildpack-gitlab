@@ -1,123 +1,75 @@
-# Heroku buildpack: GitLab (work in progress)
+# Buildpack: GitLab (work in progress)
 
-This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for [GitLab](http://gitlab.org/).
+This is a [Buildpack](http://devcenter.heroku.com/articles/buildpacks) for [GitLab](http://gitlab.org/) to be used in combination with the [heroku-buildpack-ruby](https://github.com/heroku/heroku-buildpack-ruby) through [heroku-buildpack-multi](https://github.com/ddollar/heroku-buildpack-multi).
 
 [![Build Status](https://drone.mrolke.de/github.com/amtrack/buildpack-gitlab/status.svg?branch=master)](https://drone.mrolke.de/github.com/amtrack/buildpack-gitlab) master
 
-## Getting started
+## How does it work?
 
+> While the [buildpack-gitlab](https://github.com/amtrack/buildpack-gitlab) will setup [gitlab-shell](https://github.com/gitlabhq/gitlab-shell) and do some magic,
+
+> the [heroku-buildpack-ruby](https://github.com/heroku/heroku-buildpack-ruby) will take care of [gitlabhq](https://github.com/gitlabhq/gitlabhq) itself.
+
+## Getting started
 ### Requirements
 
-* [dokku](https://github.com/progrium/dokku) (heroku has only an *ephemeral filesystem*)
-* All of [these dokku plugins](#requirements)
-* At least **1GB of RAM** and **swap enabled**
+1. A PaaS like
+	* [dokku](https://github.com/progrium/dokku)
+	* [dokku-alt](https://github.com/dokku-alt/dokku-alt)
+	* ~~heroku~~ (it has only an *ephemeral filesystem*)
+2. At least **1GB of RAM** and **swap enabled**
+3. A `redis` and (`postgres` or `mariadb`) addon
+4. Additional persistent storage
+5. Additional port forwarding for the SSH port
 
-### Checkout gitlabhq
+### General instructions
 
-	$ git clone https://github.com/gitlabhq/gitlabhq.git
-	$ cd gitlabhq
+Tell your PaaS to use the multi buildpack:
 
-### Prepare your application for deploying to `dokku`
+```
+BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
+```
 
-	$ git checkout -b deployment
-    $ echo -e "https://github.com/amtrack/buildpack-gitlab.git\nhttps://github.com/heroku/heroku-buildpack-ruby.git" > .buildpacks
-	$ git add .buildpacks
-	$ git commit -m "prepare for dokku"
+with the buildpacks *buildpack-gitlab* and *heroku-buildpack-ruby*:
+```console
+$ git checkout -b deployment
+$ echo -e "https://github.com/amtrack/buildpack-gitlab.git\nhttps://github.com/heroku/heroku-buildpack-ruby.git" > .buildpacks
+$ git add .buildpacks
+$ git commit -m "prepare for deployment"
+```
 
-### Create a dokku application on the server
+### PaaS specific instructions
+Depending on your **PaaS**, see the detailed instructions
+for
 
-	$ git remote add dokku <your-dokku-url>
-	$ git push dokku deployment:master # will fail
+* creating the application
+* managing required addons
+* managing persistent storage and
+* managing port forwarding
 
-### Configure the app on your dokku server
+PaaS | Instructions
+---- | ------------
+**dokku** | <https://github.com/amtrack/buildpack-gitlab/wiki/dokku>
+**dokku-alt** | <https://github.com/amtrack/buildpack-gitlab/wiki/dokku-alt>
 
-	root@vps:$ dokku config:set gitlab BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
-	root@vps:$ dokku config:set gitlab CURL_TIMEOUT=120
-	root@vps:$ dokku mariadb:create gitlab
-	root@vps:$ dokku redis:create gitlab
+## Environment variables
 
-### Push the application
+### SMTP_URL
+Setting the SMTP credentials in the syntax `smtps://<user>:<password>@<smtp_url>/?domain=<domain>`
 
-	$ git push dokku deployment:master
+Example:
 
-### Seed the database
+	SMTP_URL=smtps://john.doe:asdf1234@smtp.gmail.com/?domain=gmail.com
 
-	root@vps:$ dokku run gitlab bundle exec rake db:setup RAILS_ENV=production
-	root@vps:$ dokku run gitlab bundle exec rake db:seed_fu RAILS_ENV=production
+### GITLAB_SHELL_VERSION
+Specifying the gitlab-shell version.
 
-### Test the deployment
+Currently the default `gitlab-shell` version will be read from the **file** `GITLAB_SHELL_VERSION`.
+If you want to use another version you can set the **environment variable** `GITLAB_SHELL_VERSION` (mind prefixing the version number with a *v* in the environment variable).
 
-	root@vps:$ dokku run gitlab bundle exec rake gitlab:check RAILS_ENV=production
+Example:
 
-Open `https://gitlab.<yourdomain>` in your browser.
-
-## Advanced usage
-
-### Persistent storage
-
-It is highly recommended to run these steps as early as possible after having deployed gitlab.
-
-Create some folders for persistent storage:
-
-	root@vps:$ test -d /opt/gitlab/repositories || sudo mkdir -p /opt/gitlab/repositories; sudo chown -R dokku:dokku /opt/gitlab/repositories
-	root@vps:$ test -d /opt/gitlab/gitlab-satellites || sudo mkdir -p /opt/gitlab/gitlab-satellites; sudo chown -R dokku:dokku /opt/gitlab/gitlab-satellites
-	root@vps:$ test -d /opt/gitlab/log || sudo mkdir -p /opt/gitlab/log; sudo chown -R dokku:dokku /opt/gitlab/log
-	root@vps:$ test -d /opt/gitlab/.ssh || sudo mkdir -p /opt/gitlab/.ssh; sudo chown -R dokku:dokku /opt/gitlab/.ssh
-
-Set some docker options for persistent storage:
-
-	root@vps:$ dokku docker-options:add gitlab "-v /opt/gitlab/repositories:/home/git/repositories"
-	root@vps:$ dokku docker-options:add gitlab "-v /opt/gitlab/gitlab-satellites:/home/git/gitlab-satellites"
-	root@vps:$ dokku docker-options:add gitlab "-v /opt/gitlab/log:/app/log"
-	root@vps:$ dokku docker-options:add gitlab "-v /opt/gitlab/.ssh:/home/git/.ssh"
-
-Rebuild the app to apply the docker options:
-
-	root@vps:$ dokku rebuild gitlab
-
-### Exposing the SSH port to access the git repositories (work in progress)
-
-You will need to make some changes in the `config/gitlab.yml` file (see instruction at [GitLab Installation Guide](https://github.com/gitlabhq/gitlabhq/blob/master/doc/install/installation.md#user-content-custom-ssh-connection))
-and expose the containers port `22` to the host port `2222` (for example).
-
-First tell dokku to expose the port when the app is build again
-
-	root@vps:$ dokku docker-options:add gitlab "-p 2222:22"
-
-Then create the config based on the example config file
-
-	$ cp config/gitlab.yml.example config/gitlab.yml
-	$ git add -f config/gitlab.yml
-	$ git commit -am "force add config/gitlab.yml"
-
-Make the following changes
-
-	* gitlab.host: gitlab.<yourdomain>
-	* gitlab_shell.ssh_port: 2222
-
-Commit and push the changes
-
-	$ git commit -am "expose repositories on port 2222 via SSH"
-	$ git push dokku deployment:master
-
-### Setting the SMTP credentials
-
-	root@vps:$ dokku config:set gitlab SMTP_URL=smtps://<user>:<password>@smtp.gmail.com/?domain=gmail.com
-
-### Specifying the gitlab-shell version
-
-Currently the default `gitlab-shell` version is set to `v1.9.5`. If you want to use another version you can do this via the environment variable `GITLAB_SHELL_VERSION`.
-
-	root@vps:$ dokku config:set gitlab GITLAB_SHELL_VERSION=v1.9.X
-
-## <a name="requirements"></a>Required dokku plugins
-
- * [dokku-user-env-compile](https://github.com/musicglue/dokku-user-env-compile)
- * [dokku-supervisord](https://github.com/statianzo/dokku-supervisord)
- * [dokku-md-plugin](https://github.com/Kloadut/dokku-md-plugin)
- * [dokku-redis-plugin](https://github.com/luxifer/dokku-redis-plugin)
- * [dokku-docker-options](https://github.com/dyson/dokku-docker-options)
- * [dokku-rebuild](https://github.com/scottatron/dokku-rebuild)
+	GITLAB_SHELL_VERSION=v2.0.0
 
 ## Info
 
@@ -127,44 +79,6 @@ Most of the GitLab Installation stuff is borrowed from
 
 This buildpack was generated with the Yeoman generator [generator-buildpack](https://github.com/amtrack/generator-buildpack)
 
-Hacking
--------
-
-To make changes to this buildpack, fork it on Github. Push up changes to your fork, then create a new Heroku app to test it, or configure an existing app to use your buildpack:
-
-```
-# Create a new Heroku app that uses your buildpack
-heroku create --buildpack <your-github-url>
-
-# Configure an existing Heroku app to use your buildpack
-heroku config:set BUILDPACK_URL=<your-github-url>
-
-# You can also use a git branch!
-heroku config:set BUILDPACK_URL=<your-github-url>#your-branch
-```
-
 ## Known Issues
 
 See [here](https://github.com/amtrack/buildpack-gitlab/wiki/KnownIssues)
-
-## Testing
-
-[Anvil](https://github.com/ddollar/anvil) is a generic build server for Heroku.
-
-```
-gem install anvil-cli
-```
-
-The [heroku-anvil CLI plugin](https://github.com/ddollar/heroku-anvil) is a wrapper for anvil.
-
-```
-heroku plugins:install https://github.com/ddollar/heroku-anvil
-```
-
-The [ddollar/test](https://github.com/ddollar/buildpack-test) buildpack runs `bin/test` on your app/buildpack.
-
-```
-heroku build -b ddollar/test # -b can also point to a local directory
-```
-
-For more info on testing, see [Best Practices for Testing Buildpacks](https://discussion.heroku.com/t/best-practices-for-testing-buildpacks/294) on the Heroku discussion forum.

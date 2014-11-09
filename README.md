@@ -2,8 +2,6 @@
 
 This is a [Buildpack](http://devcenter.heroku.com/articles/buildpacks) for [GitLab](http://gitlab.org/) to be used in combination with the [heroku-buildpack-ruby](https://github.com/heroku/heroku-buildpack-ruby) through [heroku-buildpack-multi](https://github.com/ddollar/heroku-buildpack-multi).
 
-[![Build Status](https://drone.mrolke.de/github.com/amtrack/buildpack-gitlab/status.svg?branch=master)](https://drone.mrolke.de/github.com/amtrack/buildpack-gitlab) master
-
 ## How does it work?
 
 > While the [buildpack-gitlab](https://github.com/amtrack/buildpack-gitlab) will setup [gitlab-shell](https://github.com/gitlabhq/gitlab-shell) and do some magic,

@@ -1,4 +1,7 @@
-# Buildpack: GitLab (work in progress)
+# Buildpack: GitLab
+
+***Note:*** **This project is currently unmaintained.**
+Please get in touch with me via [this issue](https://github.com/amtrack/buildpack-gitlab/issues/15) if you're interested in taking over maintenance.
 
 This is a [Buildpack](http://devcenter.heroku.com/articles/buildpacks) for [GitLab](http://gitlab.org/) to be used in combination with the [heroku-buildpack-ruby](https://github.com/heroku/heroku-buildpack-ruby) through [heroku-buildpack-multi](https://github.com/ddollar/heroku-buildpack-multi).
 
